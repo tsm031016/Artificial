@@ -65,18 +65,29 @@ st.markdown(
 
 def create_chart(input_data, chart_type):
     """生成统计图表"""
-    df_data = pd.DataFrame(
-        data={
-            "x": input_data["columns"],
-            "y": input_data["data"]
-        }
-    ).set_index("x")
-    if chart_type == "bar":
-        plt.figure(figsize=(8, 5), dpi=120)
-        plt.bar(input_data["columns"], input_data["data"], width=0.4, hatch='///')
-        st.pyplot(plt.gcf())
-    elif chart_type == "line":
-        st.line_chart(df_data)
+    try:
+        # 检查数据格式
+        if len(input_data["columns"]) != len(input_data["data"]):
+            st.error("数据格式错误：列名和数据长度不一致")
+            return
+
+        df_data = pd.DataFrame(
+            data={
+                "x": input_data["columns"],
+                "y": input_data["data"]
+            }
+        ).set_index("x")
+
+        if chart_type == "bar":
+            # 清除之前的图形
+            plt.clf()
+            plt.figure(figsize=(8, 5), dpi=120)
+            plt.bar(input_data["columns"], input_data["data"], width=0.4, hatch='///')
+            st.pyplot(plt.gcf())
+        elif chart_type == "line":
+            st.line_chart(df_data)
+    except Exception as e:
+        st.error(f"图表生成失败：{str(e)}")
 
 def read_pdf(file):
     pdf_reader = PdfReader(file)

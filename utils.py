@@ -9,6 +9,7 @@ import json
 
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain_openai import ChatOpenAI
 
@@ -32,7 +33,7 @@ PROMPT_TEMPLATE = """你是一位数据分析助手，你的回应内容取决�
    - 数值类型不得添加引号
    - 确保数组闭合无遗漏
    错误案例：{'columns':['Product', 'Sales'], data:[[A001, 200]]}
-   正确案例：{"columns":["product", "sales"], "data":[["A001, 200]]}
+   正确案例：{"columns":["product", "sales"], "data":[["A001", 200]]}
 
 注意：响应数据的"output"中不要有换行符、制表符以及其他格式符号。
 
@@ -41,7 +42,6 @@ PROMPT_TEMPLATE = """你是一位数据分析助手，你的回应内容取决�
 # 全局缓存，用于存储已问过的问题和对应的答案
 qa_cache = {}
 
-
 def dataframe_agent(df, query, memory):
     # 检查缓存中是否已有该问题的答案
     cache_key = hash(pd.util.hash_pandas_object(df).sum()) + hash(query)
@@ -49,10 +49,12 @@ def dataframe_agent(df, query, memory):
         print(f"从缓存中获取问题: {query} 的答案")
         return qa_cache[cache_key]
 
+
     model = ChatOpenAI(
         base_url='https://api.deepseek.com/',
         api_key=st.secrets["API_KEY"],
-        model="deepseek-reasoner",
+        stream=True,
+        model="deepseek-chat",
         temperature=0,
         max_tokens=8192
     )
